@@ -81,7 +81,10 @@ def ask_gemini(user_message, devices, scenes):
         f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}",
         json={"contents": [{"parts": [{"text": prompt}]}]}
     )
-    text = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+    res_json = res.json()
+    if "candidates" not in res_json:
+        raise Exception(f"Geminiエラー: {res_json}")
+    text = res_json["candidates"][0]["content"]["parts"][0]["text"]
     text = text.replace("```json", "").replace("```", "").strip()
     return json.loads(text)
 
