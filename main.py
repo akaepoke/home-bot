@@ -111,7 +111,7 @@ def ask_claude(user_message, devices, scenes):
             "Content-Type": "application/json"
         },
         json={
-            "model": "claude-sonnet-4-5",
+            "model": "claude-haiku-4-5",
             "max_tokens": 512,
             "messages": [{"role": "user", "content": prompt}]
         }
