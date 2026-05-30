@@ -38,8 +38,8 @@ def get_scenes():
     res = requests.get("https://api.switch-bot.com/v1.1/scenes", headers=make_headers())
     return res.json().get("body", [])
 
-def control_device(device_id, command, param="default"):
-    body = {"command": command, "parameter": param, "commandType": "command"}
+def control_device(device_id, command, param="default", command_type="command"):
+    body = {"command": command, "parameter": param, "commandType": command_type}
     requests.post(f"https://api.switch-bot.com/v1.1/devices/{device_id}/commands", headers=make_headers(), json=body)
 
 def run_scene(scene_id):
@@ -60,8 +60,8 @@ def ask_groq(user_message, devices, scenes):
 
 ニュアンスのルール:
 - 「暗くして」「目が痛い」→ デバイス「電気」をOFF、デバイス「フィギュアライト」をON
-- 「寒い」「暖かくして」→ シーン「暖房」を実行
-- 「熱い」「暑い」「涼しくして」→ シーン「冷房」を実行
+- 「寒い」「暖かくして」「暖房つけて」→ デバイス「冷暖房」にcommand「暖房」をcommandType「customize」で送る
+- 「熱い」「暑い」「涼しくして」「冷房つけて」→ デバイス「冷暖房」にcommand「冷房」をcommandType「customize」で送る
 - 「寝る」「おやすみ」→ 電気・エアコン・せんぷうき・フィギュアライトをOFF
 - 「眩しい」「明るすぎ」→ デバイス「電気」をOFF
 
@@ -73,7 +73,8 @@ def ask_groq(user_message, devices, scenes):
     {{
       "type": "device" または "scene",
       "id": "デバイスIDまたはシーンID",
-      "command": "turnOn" または "turnOff"（deviceの場合のみ）,
+      "command": "turnOn" または "turnOff" またはカスタムコマンド名,
+      "commandType": "command" または "customize",
       "description": "何をするか日本語で"
     }}
   ],
@@ -123,7 +124,7 @@ async def on_message(message):
 
         for action in result["actions"]:
             if action["type"] == "device":
-                control_device(action["id"], action["command"])
+                control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
             elif action["type"] == "scene":
                 run_scene(action["id"])
 
