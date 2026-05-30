@@ -8,7 +8,7 @@ import base64
 import requests
 
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 SWITCHBOT_TOKEN = os.environ.get("SWITCHBOT_TOKEN")
 SWITCHBOT_SECRET = os.environ.get("SWITCHBOT_SECRET")
 
@@ -46,7 +46,7 @@ def run_scene(scene_id):
     res = requests.post(f"https://api.switch-bot.com/v1.1/scenes/{scene_id}/execute", headers=make_headers())
     return res.json()
 
-def ask_groq(user_message, devices, scenes):
+def ask_claude(user_message, devices, scenes):
     device_list = "\n".join([f"- {d['deviceName']}（ID: {d['deviceId']}）" for d in devices])
     scene_list = "\n".join([f"- {s['sceneName']}（ID: {s['sceneId']}）" for s in scenes])
 
@@ -104,21 +104,22 @@ def ask_groq(user_message, devices, scenes):
 }}"""
 
     res = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
+        "https://api.anthropic.com/v1/messages",
         headers={
-            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
             "Content-Type": "application/json"
         },
         json={
-            "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.9
+            "model": "claude-sonnet-4-20250514",
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": prompt}]
         }
     )
     res_json = res.json()
-    if "choices" not in res_json:
-        raise Exception(f"Groqエラー: {res_json}")
-    text = res_json["choices"][0]["message"]["content"]
+    if "content" not in res_json:
+        raise Exception(f"Claudeエラー: {res_json}")
+    text = res_json["content"][0]["text"]
     text = text.replace("```json", "").replace("```", "").strip()
     return json.loads(text)
 
@@ -142,7 +143,7 @@ async def on_message(message):
     try:
         devices = get_devices()
         scenes = get_scenes()
-        result = ask_groq(user_text, devices, scenes)
+        result = ask_claude(user_text, devices, scenes)
 
         for action in result["actions"]:
             if action["type"] == "device":
