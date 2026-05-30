@@ -43,7 +43,8 @@ def control_device(device_id, command, param="default", command_type="command"):
     requests.post(f"https://api.switch-bot.com/v1.1/devices/{device_id}/commands", headers=make_headers(), json=body)
 
 def run_scene(scene_id):
-    requests.post(f"https://api.switch-bot.com/v1.1/scenes/{scene_id}/execute", headers=make_headers())
+    res = requests.post(f"https://api.switch-bot.com/v1.1/scenes/{scene_id}/execute", headers=make_headers())
+    return res.json()
 
 def ask_groq(user_message, devices, scenes):
     device_list = "\n".join([f"- {d['deviceName']}（ID: {d['deviceId']}）" for d in devices])
@@ -128,7 +129,8 @@ async def on_message(message):
             if action["type"] == "device":
                 control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
             elif action["type"] == "scene":
-                run_scene(action["id"])
+                scene_result = run_scene(action["id"])
+                await message.channel.send(f"シーン実行結果: {scene_result}")
 
         await message.channel.send(result["reply"])
 
