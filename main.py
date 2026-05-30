@@ -29,7 +29,10 @@ def make_headers():
 
 def get_devices():
     res = requests.get("https://api.switch-bot.com/v1.1/devices", headers=make_headers())
-    return res.json().get("body", {}).get("deviceList", [])
+    body = res.json().get("body", {})
+    devices = body.get("deviceList", [])
+    ir_devices = body.get("infraredRemoteList", [])
+    return devices + ir_devices
 
 def get_scenes():
     res = requests.get("https://api.switch-bot.com/v1.1/scenes", headers=make_headers())
