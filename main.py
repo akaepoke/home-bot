@@ -118,22 +118,12 @@ async def on_message(message):
         return
     user_text = message.content
     await message.channel.send("⏳ 考え中...")
-    scenes = get_scenes()
-        await message.channel.send(f"シーン: {[(s['sceneName'], s['sceneId']) for s in scenes]}")
-        return
 
     try:
         devices = get_devices()
         scenes = get_scenes()
-        result = ask_groq(user_text, devices, scenes)
-
-        for action in result["actions"]:
-            if action["type"] == "device":
-                control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
-            elif action["type"] == "scene":
-                run_scene(action["id"])
-
-        await message.channel.send(result["reply"])
+        await message.channel.send(f"シーン: {[(s['sceneName'], s['sceneId']) for s in scenes]}")
+        return
 
     except Exception as e:
         await message.channel.send(f"エラー: {str(e)}")
