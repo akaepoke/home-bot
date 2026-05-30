@@ -60,8 +60,8 @@ def ask_groq(user_message, devices, scenes):
 
 ニュアンスのルール:
 - 「暗くして」「目が痛い」→ デバイス「電気2」をOFF
-- 「フィギュアつけて」「フィギュアオン」→ シーン「フィギュア オン」を実行
-- 「フィギュア消して」「フィギュアオフ」→ シーン「フィギュア オフ」を実行
+- 「フィギュアつけて」「フィギュアオン」→ シーン「フィギュア オン」（ID: T02-202303121446-40390479）を実行
+- 「フィギュア消して」「フィギュアオフ」→ シーン「フィギュア オフ」（ID: T02-202303121447-37756745）を実行
 - 「寒い」「暖かくして」「暖房つけて」→ デバイス「冷暖房」にcommand「暖房」をcommandType「customize」で送る
 - 「熱い」「暑い」「涼しくして」「冷房つけて」→ デバイス「冷暖房」にcommand「冷房」をcommandType「customize」で送る
 - 「寝る」「おやすみ」→ 電気・エアコン・せんぷうき・シーン「フィギュア オフ」をOFF
@@ -122,8 +122,15 @@ async def on_message(message):
     try:
         devices = get_devices()
         scenes = get_scenes()
-        await message.channel.send(f"シーン: {[(s['sceneName'], s['sceneId']) for s in scenes]}")
-        return
+        result = ask_groq(user_text, devices, scenes)
+
+        for action in result["actions"]:
+            if action["type"] == "device":
+                control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
+            elif action["type"] == "scene":
+                run_scene(action["id"])
+
+        await message.channel.send(result["reply"])
 
     except Exception as e:
         await message.channel.send(f"エラー: {str(e)}")
