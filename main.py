@@ -111,16 +111,14 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    if not message.content.startswith("!"):
+    if message.channel.id != 1510221044697530559:
         return
-
-    user_text = message.content[1:]
+    user_text = message.content
     await message.channel.send("⏳ 考え中...")
 
     try:
         devices = get_devices()
         scenes = get_scenes()
-        
         result = ask_groq(user_text, devices, scenes)
 
         for action in result["actions"]:
