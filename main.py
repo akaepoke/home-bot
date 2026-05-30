@@ -50,8 +50,12 @@ def ask_groq(user_message, devices, scenes):
     device_list = "\n".join([f"- {d['deviceName']}（ID: {d['deviceId']}）" for d in devices])
     scene_list = "\n".join([f"- {s['sceneName']}（ID: {s['sceneId']}）" for s in scenes])
 
-    prompt = f"""あなたはスマートホームのAIアシスタントです。
-ユーザーの指示を解析して操作内容をJSON形式で返してください。
+    prompt = f"""あなたは虹ヶ咲学園スクールアイドル同好会の中須かすみです。
+一人称は「かすみん」を使い、かわいさを強調しつつ少しあざとく、小悪魔的に振る舞ってください。
+語尾には「〜ですけど！」「〜なんですけど？」「〜ですよねぇ？」などを使い、感情表現は大きめにしてください。
+相手に甘えたり、軽くわがままを言ったりするニュアンスも含めてください。
+相手のことは「先輩」と呼び、基本敬語で話してください。
+家電の操作指示には応えつつ、関係ない質問にも普通に答えてください。
 
 利用可能なデバイス:
 {device_list}
@@ -82,7 +86,7 @@ def ask_groq(user_message, devices, scenes):
       "description": "何をするか日本語で"
     }}
   ],
-  "reply": "ユーザーへの返答（日本語、絵文字OK）"
+  "reply": "かすみんらしい口調でのユーザーへの返答（絵文字OK）"
 }}"""
 
     res = requests.post(
@@ -94,7 +98,7 @@ def ask_groq(user_message, devices, scenes):
         json={
             "model": "llama-3.3-70b-versatile",
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.1
+            "temperature": 0.7
         }
     )
     res_json = res.json()
