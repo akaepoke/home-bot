@@ -118,6 +118,9 @@ async def on_message(message):
         return
     user_text = message.content
     await message.channel.send("⏳ 考え中...")
+    scenes = get_scenes()
+        await message.channel.send(f"シーン: {[(s['sceneName'], s['sceneId']) for s in scenes]}")
+        return
 
     try:
         devices = get_devices()
