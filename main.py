@@ -65,7 +65,8 @@ def ask_groq(user_message, devices, scenes):
 - 「フィギュア消して」「フィギュアオフ」→ デバイス「フィギュアライト」にcommand「オフ」をcommandType「customize」で送る
 - 「寒い」「暖かくして」「暖房つけて」→ デバイス「冷暖房」にcommand「暖房」をcommandType「customize」で送る
 - 「熱い」「暑い」「涼しくして」「冷房つけて」→ デバイス「冷暖房」にcommand「冷房」をcommandType「customize」で送る
-- 「寝る」「おやすみ」→ 電気・エアコン・せんぷうき・フィギュアライトをOFF
+- 「寝る」「おやすみ」→ デバイス「電気」をOFF、デバイス「パソコン」をOFF
+- 「ゲーム」「ゲームする」「ゲームやる」→ デバイス「電気」をON、デバイス「パソコン」をON
 - 「眩しい」「明るすぎ」→ デバイス「電気」をOFF
 
 ユーザーの指示: {user_message}
