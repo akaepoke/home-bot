@@ -120,8 +120,7 @@ async def on_message(message):
     try:
         devices = get_devices()
         scenes = get_scenes()
-        await message.channel.send(f"デバイス: {[d['deviceName'] for d in devices]}")
-        await message.channel.send(f"シーン: {[s['sceneName'] for s in scenes]}")
+        
         result = ask_groq(user_text, devices, scenes)
 
         for action in result["actions"]:
