@@ -6,6 +6,8 @@ import hashlib
 import hmac
 import base64
 import requests
+import asyncio
+import re
 
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
@@ -70,6 +72,7 @@ def ask_claude(user_message, devices, scenes):
 
 家電の操作指示には以下のルールで対応しつつ、かすみんらしい口調で短く返答してください。
 関係ない質問や雑談にも、かすみんとして短く答えてください。
+「〇分後」「〇時間後」などの時間指定がある場合はdelay_secondsに秒数を入れてください。
 
 利用可能なデバイス:
 {device_list}
@@ -91,6 +94,7 @@ def ask_claude(user_message, devices, scenes):
 
 以下のJSON形式のみで返答してください（コードブロック不要）:
 {{
+  "delay_seconds": 0,
   "actions": [
     {{
       "type": "device" または "scene",
@@ -131,6 +135,15 @@ client = discord.Client(intents=intents)
 async def on_ready():
     print(f"Bot起動: {client.user}")
 
+async def execute_delayed(channel, actions, delay_seconds):
+    await asyncio.sleep(delay_seconds)
+    for action in actions:
+        if action["type"] == "device":
+            control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
+        elif action["type"] == "scene":
+            run_scene(action["id"])
+    await channel.send("⏰ 予約した操作を実行しました！")
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -145,13 +158,27 @@ async def on_message(message):
         scenes = get_scenes()
         result = ask_claude(user_text, devices, scenes)
 
-        for action in result["actions"]:
-            if action["type"] == "device":
-                control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
-            elif action["type"] == "scene":
-                run_scene(action["id"])
+        delay = result.get("delay_seconds", 0)
 
-        await message.channel.send(result["reply"])
+        if delay > 0:
+            minutes = delay // 60
+            hours = minutes // 60
+            if hours > 0:
+                time_str = f"{hours}時間"
+                if minutes % 60 > 0:
+                    time_str += f"{minutes % 60}分"
+            else:
+                time_str = f"{minutes}分"
+            await message.channel.send(result["reply"])
+            await message.channel.send(f"⏰ {time_str}後に実行します！")
+            asyncio.ensure_future(execute_delayed(message.channel, result["actions"], delay))
+        else:
+            for action in result["actions"]:
+                if action["type"] == "device":
+                    control_device(action["id"], action["command"], command_type=action.get("commandType", "command"))
+                elif action["type"] == "scene":
+                    run_scene(action["id"])
+            await message.channel.send(result["reply"])
 
     except Exception as e:
         await message.channel.send(f"エラー: {str(e)}")
